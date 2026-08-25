@@ -216,11 +216,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     </div>
   </div>
   <div class="section-hdr">Referral Totals — By Brand, State &amp; Treatment Type</div>
-  <div class="g111">
+  <div class="g11">
     <div class="card"><div class="card-hdr"><div class="card-title">By Brand</div></div><div style="position:relative;height:340px"><canvas id="c-brand"></canvas></div></div>
     <div class="card"><div class="card-hdr"><div class="card-title">By State</div></div><div style="position:relative;height:340px"><canvas id="c-state"></canvas></div></div>
-    <div class="card"><div class="card-hdr"><div class="card-title">Treatment Network</div><div class="card-sub">% of all referrals</div></div><div style="position:relative;height:280px"><canvas id="c-network-ov"></canvas></div></div>
   </div>
+  <div class="gfull card"><div class="card-hdr"><div class="card-title">Treatment Network</div><div class="card-sub">Referrals by treatment type · count and % of total</div></div><div style="position:relative;height:300px"><canvas id="c-network-ov"></canvas></div></div>
   <div class="gfull card">
     <div class="card-hdr"><div><div class="card-title">Open Cases</div><div class="card-sub">Currently active referrals</div></div></div>
     <div class="tbl-wrap"><div id="tbl-open"></div></div>
@@ -250,8 +250,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     <div class="card"><div class="card-hdr"><div><div class="card-title">Initial Work Capacity Recommendation</div><div class="card-sub">Physio recommendation · where physio attended</div></div></div><canvas id="c-workcap" class="ch280"></canvas></div>
   </div>
   <div class="g11">
-    <div class="card"><div class="card-hdr"><div><div class="card-title">Time to First Physio Appointment</div><div class="card-sub">Working days from referral</div></div></div><canvas id="c-physio-time" class="ch240"></canvas></div>
-    <div class="card"><div class="card-hdr"><div class="card-title">Physio Treatment Count Distribution</div></div><canvas id="c-tx-count" class="ch360"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-title">Time to First Physio Appointment</div><div class="card-sub">Working days from referral</div></div></div><canvas id="c-physio-time" class="ch360"></canvas></div>
+    <div class="card"><div class="card-hdr"><div class="card-title">Physio Treatment Count Distribution</div></div><canvas id="c-tx-count" class="ch480"></canvas></div>
   </div>
   <div class="gfull card"><div class="card-hdr"><div class="card-title">Triage Outcome Breakdown</div></div><div style="position:relative;height:360px"><canvas id="c-triage-out"></canvas></div></div>
   <div id="drill-treatment" class="drill-panel"></div>
@@ -411,6 +411,24 @@ function getPeriodStr(recs){
 
 // ── Filters ───────────────────────────────────────────────────────────────────
 let filtered = [...ALL];
+function updateSiteOptions(){
+  const brand=document.getElementById('f-brand').value;
+  const state=document.getElementById('f-state').value;
+  const si=document.getElementById('f-site');
+  const current=si.value;
+  // Filter ALL records to those matching the current brand/state selection
+  const pool=ALL.filter(r=>{
+    if(brand!=='all' && r.brand!==brand) return false;
+    if(state!=='all' && r.state!==state) return false;
+    return true;
+  });
+  const sites=[...new Set(pool.map(r=>r.site_name))].sort();
+  // Rebuild options
+  si.innerHTML='<option value="all">All Sites</option>';
+  sites.forEach(function(s){ const o=document.createElement('option'); o.value=s; o.textContent=s; si.appendChild(o); });
+  // Restore previous selection if still valid, otherwise reset to all
+  if(sites.includes(current)) si.value=current; else si.value='all';
+}
 function applyFilters(){
   const brand=document.getElementById('f-brand').value;
   const state=document.getElementById('f-state').value;
@@ -432,10 +450,13 @@ function applyFilters(){
   renderActive();
 }
 function resetFilters(){
-  ['f-brand','f-state','f-site','f-reftype','f-status'].forEach(id=>document.getElementById(id).value='all');
+  ['f-brand','f-state','f-reftype','f-status'].forEach(id=>document.getElementById(id).value='all');
+  updateSiteOptions();
   setMonthPreset('all', null);
 }
-['f-brand','f-state','f-site','f-reftype','f-status'].forEach(id=>
+document.getElementById('f-brand').addEventListener('change', function(){ updateSiteOptions(); applyFilters(); });
+document.getElementById('f-state').addEventListener('change', function(){ updateSiteOptions(); applyFilters(); });
+['f-site','f-reftype','f-status'].forEach(id=>
   document.getElementById(id).addEventListener('change', applyFilters)
 );
 function populateFilters(){
@@ -453,9 +474,8 @@ function populateFilters(){
   const states=[...new Set(ALL.map(r=>r.state).filter(s=>s&&s!=='—'))].sort();
   const ss=document.getElementById('f-state');
   states.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; ss.appendChild(o); });
-  const sites=[...new Set(ALL.map(r=>r.site_name))].sort();
-  const si=document.getElementById('f-site');
-  sites.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; si.appendChild(o); });
+  // Site options are dynamic — populated via updateSiteOptions() based on brand/state
+  updateSiteOptions();
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -562,7 +582,6 @@ function renderOverview(){
     kpiCard('Median Hrs to GP Appt',medGPHrs+'h','Referral → first GP appt ('+gpR.length+' cases)',parseFloat(medGPHrs)>8?'amber':'green')+
     kpiCard('Avg Physio Treatments',avgTx,'Per musculoskeletal referral','slate')+
     kpiCard('Top Injury Site',total?Math.round(topSite[1]/total*100):0+'%',topSite[0].length>28?topSite[0].slice(0,28)+'…':topSite[0],'amber')+
-    kpiCard('Work Capacity Recorded',wcRecs.length,wcPct+'% of referrals — physio capacity documented','orange')+
     kpiCard('Claim Conversion',claimed,claimPct+'% progressed to claim','navy');
 
   var activeReftype=document.getElementById('f-reftype').value;
@@ -585,7 +604,7 @@ function renderOverview(){
   mkChart('c-monthly-vol',{type:'bar',data:{
     labels:mLabel,
     datasets:[
-      {label:'Triage',data:months.map(m=>recs.filter(r=>r.referral_type==='TRIAGE'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:'#2563EB',stack:'s',borderRadius:0,datalabels:{display:false}},
+      {label:'Triage',data:months.map(m=>recs.filter(r=>r.referral_type==='TRIAGE'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:'#0D1B2A',stack:'s',borderRadius:0,datalabels:{display:false}},
       {label:'Referral',data:months.map(m=>recs.filter(r=>r.referral_type==='REFERRAL'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:'#93C5FD',stack:'s',borderRadius:0,
         datalabels:{color:'#334155',anchor:'end',align:'end',font:{size:10},
           formatter:function(v,ctx){var idx=ctx.dataIndex;return ctx.chart.data.datasets.reduce(function(s,ds){return s+(typeof ds.data[idx]==='number'?ds.data[idx]:0);},0)||'';}
@@ -598,7 +617,7 @@ function renderOverview(){
 
   // Referral type donut — white % on dark segment
   const rt={TRIAGE:triage,REFERRAL:total-triage};
-  mkChart('c-reftype',{type:'doughnut',data:{labels:['Triage','Referral'],datasets:[{data:[rt.TRIAGE,rt.REFERRAL],backgroundColor:['#2563EB','#93C5FD'],borderWidth:2}]},
+  mkChart('c-reftype',{type:'doughnut',data:{labels:['Triage','Referral'],datasets:[{data:[rt.TRIAGE,rt.REFERRAL],backgroundColor:['#0D1B2A','#93C5FD'],borderWidth:2}]},
     options:{responsive:true,plugins:{legend:{position:'bottom'},
       datalabels:{color:function(ctx){return ctx.dataIndex===0?'#fff':'#1E293B';},font:{weight:'700',size:13},
         formatter:function(v,ctx){var t=ctx.chart.data.datasets[0].data.reduce(function(s,n){return s+n;},0);return Math.round(v/t*100)+'%';}}}}
@@ -622,7 +641,6 @@ function renderOverview(){
 
   // Network — include % of total as label
   var nw=topK(recs,'network',10);
-  var nwTotal=nw.reduce(function(s,p){return s+p[1];},0)||1;
   var nwTotal=nw.reduce(function(s,p){return s+p[1];},0)||1;
   mkChart('c-network-ov',{type:'bar',data:{
     labels:nw.map(p=>p[0].replace(' Network','')),
@@ -702,7 +720,6 @@ function renderTreatment(){
     kpiCard('Avg Days to Physio',avgD,'Referral → first physio appt (Mon–Fri)',parseFloat(avgD)>=3?'amber':'green')+
     kpiCard('Median Hrs to GP Appt',medGPHrs+'h',gpR.length+' cases with GP appointment',parseFloat(medGPHrs)>8?'amber':'green')+
     kpiCard('Avg Physio Treatments',avgTx,'Per musculoskeletal referral','slate')+
-    kpiCard('Work Capacity Recorded',wcRecs.length,wcPct+'% of referrals — physio attended','orange')+
     kpiCard('Claim Conversion',claimed,claimPct+'% of referrals progressed to claim','red');
 
   const nw=topK(recs,'network',8);
@@ -720,16 +737,17 @@ function renderTreatment(){
 
   const dayBuckets={'Same Day (0)':0,'1 day':0,'2 days':0,'3–5 days':0,'6+ days':0};
   physWD.forEach(function(d){ if(d===0)dayBuckets['Same Day (0)']++; else if(d===1)dayBuckets['1 day']++; else if(d===2)dayBuckets['2 days']++; else if(d<=5)dayBuckets['3–5 days']++; else dayBuckets['6+ days']++; });
-  mkChart('c-physio-time',{type:'bar',data:{labels:Object.keys(dayBuckets),datasets:[{data:Object.values(dayBuckets),backgroundColor:['#059669','#2563EB','#D97706','#EA580C','#DC2626'],borderRadius:5}]},
-    options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:11}}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
+  mkChart('c-physio-time',{type:'bar',data:{labels:Object.keys(dayBuckets),datasets:[{data:Object.values(dayBuckets),backgroundColor:['#059669','#2563EB','#D97706','#EA580C','#DC2626'],borderRadius:5,
+    datalabels:{anchor:'end',align:'top',offset:4,font:{size:11,weight:'600'},color:'#334155',formatter:function(v){return v;}}}]},
+    options:{responsive:true,layout:{padding:{top:28}},plugins:{legend:{display:false},datalabels:{}},scales:{y:{beginAtZero:true,grid:{color:'#E2E8F0'}},x:{grid:{display:false}}}}
   });
 
   var txBuckets={'1–2':0,'3–4':0,'5–6':0};
   recs.filter(r=>r.physio_treatments>0&&r.physio_treatments<=6).forEach(function(r){ var n=r.physio_treatments; if(n<=2)txBuckets['1–2']++; else if(n<=4)txBuckets['3–4']++; else txBuckets['5–6']++; });
   var txTotal=Object.values(txBuckets).reduce(function(a,b){return a+b;},0)||1;
   mkChart('c-tx-count',{type:'bar',data:{labels:Object.keys(txBuckets),datasets:[{data:Object.values(txBuckets),backgroundColor:['#2563EB','#059669','#D97706'],borderRadius:5,
-    datalabels:{anchor:'end',align:'end',font:{size:10},color:'#334155',formatter:function(v){return v+' ('+Math.round(v/txTotal*100)+'%)';}}}]},
-    options:{responsive:true,plugins:{legend:{display:false},datalabels:{}},scales:{y:{beginAtZero:true,grid:{color:'#E2E8F0'}},x:{grid:{display:false}}}}
+    datalabels:{anchor:'end',align:'top',offset:4,font:{size:11,weight:'600'},color:'#334155',formatter:function(v){return v+' ('+Math.round(v/txTotal*100)+'%)';}}}]},
+    options:{responsive:true,layout:{padding:{top:28}},plugins:{legend:{display:false},datalabels:{}},scales:{y:{beginAtZero:true,grid:{color:'#E2E8F0'}},x:{grid:{display:false}}}}
   });
 
   const to=topK(recs.filter(r=>r.triage_outcome),'triage_outcome',10);
