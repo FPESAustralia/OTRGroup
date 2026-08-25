@@ -266,7 +266,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
       <div id="top-sites-bars"></div>
     </div>
     <div class="card">
-      <div class="card-hdr"><div><div class="card-title">Triage Utilisation by Site</div><div class="card-sub">Sites with ≥3 referrals · red &lt;60%, amber 60–79%, green ≥80%</div></div></div>
+      <div class="card-hdr"><div class="card-title">Triage Utilisation by Site</div></div>
       <div id="triage-util-bars"></div>
     </div>
   </div>
@@ -452,7 +452,7 @@ function applyFilters(){
 function resetFilters(){
   ['f-brand','f-state','f-reftype','f-status'].forEach(id=>document.getElementById(id).value='all');
   updateSiteOptions();
-  setMonthPreset('all', null);
+  setMonthPreset('12', null);
 }
 document.getElementById('f-brand').addEventListener('change', function(){ updateSiteOptions(); applyFilters(); });
 document.getElementById('f-state').addEventListener('change', function(){ updateSiteOptions(); applyFilters(); });
@@ -581,7 +581,7 @@ function renderOverview(){
     kpiCard('Avg Days to Physio',avgD,'Referral → first physio appt (Mon–Fri)','green')+
     kpiCard('Median Hrs to GP Appt',medGPHrs+'h','Referral → first GP appt ('+gpR.length+' cases)',parseFloat(medGPHrs)>8?'amber':'green')+
     kpiCard('Avg Physio Treatments',avgTx,'Per musculoskeletal referral','slate')+
-    kpiCard('Top Injury Site',total?Math.round(topSite[1]/total*100):0+'%',topSite[0].length>28?topSite[0].slice(0,28)+'…':topSite[0],'amber')+
+    kpiCard('Top Injury Site',(total?Math.round(topSite[1]/total*100):0)+'%',topSite[0].length>28?topSite[0].slice(0,28)+'…':topSite[0],'amber')+
     kpiCard('Claim Conversion',claimed,claimPct+'% progressed to claim','navy');
 
   var activeReftype=document.getElementById('f-reftype').value;
@@ -672,8 +672,8 @@ function renderInjuries(){
   const topM=topK(recs,'mechanism',1)[0]||['—',0];
 
   document.getElementById('kpi-injuries').innerHTML=
-    kpiCard('Top Injury Site',total?Math.round(topSite[1]/total*100):0+'%',topSite[0].length>28?topSite[0].slice(0,28)+'…':topSite[0],'amber')+
-    kpiCard('Psych Referrals',psy,total?Math.round(psy/total*100):0+'% of referrals',psy>=5?'red':'amber')+
+    kpiCard('Top Injury Site',(total?Math.round(topSite[1]/total*100):0)+'%',topSite[0].length>28?topSite[0].slice(0,28)+'…':topSite[0],'amber')+
+    kpiCard('Psych Referrals',psy,(total?Math.round(psy/total*100):0)+'% of referrals',psy>=5?'red':'amber')+
     kpiCard('Top Mechanism',topM[1],topM[0].length>32?topM[0].slice(0,32)+'…':topM[0],'slate')+
     kpiCard('Total Injuries',total,'Filtered period','blue');
 
@@ -769,26 +769,47 @@ function renderSites(){
   const activeSites=sd.length;
   const noT=sd.filter(s=>s.triage===0);
   const avgTriage=sd.length?Math.round(sd.reduce((s,x)=>s+x.pct,0)/sd.length):0;
-  const topSiteObj=sd.slice().sort(function(a,b){return b.total-a.total;})[0];
+
+  // Highest Volume Site — handle ties
+  const sortedByVol=sd.slice().sort(function(a,b){return b.total-a.total;});
+  const topVol=sortedByVol[0]?sortedByVol[0].total:0;
+  const topSites=sortedByVol.filter(s=>s.total===topVol);
+  var topSiteDisplay='—', topSiteSub='No data';
+  if(topSites.length===1){
+    topSiteDisplay='<span style="font-size:14px;font-weight:700">'+topSites[0].site+'</span>';
+    topSiteSub=topVol+' referrals';
+  } else if(topSites.length>1){
+    topSiteDisplay='<span style="font-size:12px;font-weight:700;line-height:1.4">'+topSites.map(s=>s.site).join('<br>')+'</span>';
+    topSiteSub=topVol+' referrals each ('+topSites.length+' sites tied)';
+  }
 
   document.getElementById('kpi-sites').innerHTML=
     kpiCard('Active Sites',activeSites,'Sites with at least 1 referral','blue')+
     kpiCard('Avg Triage Rate',avgTriage+'%','Across all active sites',avgTriage<70?'amber':'green')+
     kpiCard('Zero-Triage Sites',noT.length,'Triage not utilised — direct referral only',noT.length>0?'red':'green')+
-    kpiCard('Highest Volume Site',topSiteObj?'<span style="font-size:14px;font-weight:700">'+topSiteObj.site+'</span>':'—',(topSiteObj?topSiteObj.total:0)+' referrals','navy');
+    kpiCard('Highest Volume Site',topSiteDisplay,topSiteSub,'navy');
 
-  const sorted=sd.slice().sort(function(a,b){return b.total-a.total;});
+  const sorted=sortedByVol;
   const top15=sorted.slice(0,15);
   const tMax=top15[0]?top15[0].total:1;
   document.getElementById('top-sites-bars').innerHTML=top15.map(function(s){
-    return '<div class="prog-item"><div class="prog-label"><span>'+s.site+'</span><span>'+s.total+'</span></div><div class="prog-bar"><div class="prog-fill" style="width:'+(s.total/tMax*100)+'%;background:'+brandColor(s.brand)+'"></div></div></div>';
+    return '<div class="prog-row"><div class="prog-label">'+s.site+'</div><div class="prog-track"><div class="prog-fill" style="width:'+(s.total/tMax*100)+'%;background:'+brandColor(s.brand)+'"></div></div><div class="prog-n">'+s.total+'</div></div>';
   }).join('');
 
-  const triageSites=sorted.filter(s=>s.total>=3).slice(0,15);
-  document.getElementById('triage-util-bars').innerHTML=triageSites.map(function(s){
+  // Triage utilisation — sorted highest to lowest, no cap, scrollable if >15
+  var triageSites=sd.filter(s=>s.total>=3).slice().sort(function(a,b){
+    if(b.pct!==a.pct) return b.pct-a.pct;  // highest % first
+    return b.total-a.total;                  // then by volume
+  });
+  var triageHtml=triageSites.map(function(s){
     var col=s.pct<60?'#DC2626':s.pct<80?'#D97706':'#059669';
-    return '<div class="prog-item"><div class="prog-label"><span>'+s.site+'</span><span>'+s.pct+'%</span></div><div class="prog-bar"><div class="prog-fill" style="width:'+s.pct+'%;background:'+col+'"></div></div></div>';
+    return '<div class="prog-row"><div class="prog-label">'+s.site+'</div><div class="prog-track"><div class="prog-fill" style="width:'+s.pct+'%;background:'+col+'"></div></div><div class="prog-n" style="color:'+col+'">'+s.pct+'%</div></div>';
   }).join('');
+  var wrapper=document.getElementById('triage-util-bars');
+  wrapper.innerHTML=triageHtml;
+  // Enable scroll if more than 15 rows
+  wrapper.style.maxHeight=triageSites.length>15?'420px':'none';
+  wrapper.style.overflowY=triageSites.length>15?'auto':'';
 
   const br=topK(recs,'brand',10);
   mkChart('c-brand-site',{type:'bar',data:{labels:br.map(p=>p[0]),datasets:[{data:br.map(p=>p[1]),backgroundColor:br.map(p=>brandColor(p[0])),borderRadius:5}]},
