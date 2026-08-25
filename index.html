@@ -2,102 +2,130 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OTR Group · Triage and Early-Intervention Reporting</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#F8FAFC;color:#1E293B;min-height:100vh}
-#pc-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0B1F3A 0%,#1A3A5C 100%);display:flex;align-items:center;justify-content:center}
-#pc-box{background:#fff;border-radius:16px;padding:40px 48px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;gap:20px;min-width:320px;max-width:380px;width:90%}
+:root{
+  --navy:#0D1B2A;--blue:#2563EB;--green:#059669;--amber:#D97706;
+  --red:#DC2626;--slate:#475569;--teal:#0891B2;--purple:#7C3AED;--navy2:#1E3148;
+  --bg:#F1F5F9;--white:#FFFFFF;--text:#1E293B;--text2:#334155;--text3:#64748B;
+  --border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+/* ── Passcode ────────────────────────────────────────────────────────────── */
+#pc-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,var(--navy) 0%,#1A3A5C 100%);display:flex;align-items:center;justify-content:center}
+#pc-box{background:var(--white);border-radius:16px;padding:40px 48px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;gap:20px;min-width:320px;max-width:380px;width:90%}
 #pc-logo{height:48px;margin-bottom:4px}
-#pc-title{font-size:18px;font-weight:700;color:#0B1F3A;text-align:center;line-height:1.3}
-#pc-sub{font-size:13px;color:#64748B;text-align:center;margin-top:-10px}
-#pc-input{width:100%;padding:12px 16px;font-size:20px;letter-spacing:6px;text-align:center;border:2px solid #CBD5E1;border-radius:8px;outline:none;color:#0B1F3A;font-weight:600;transition:border-color .2s}
-#pc-input:focus{border-color:#1A6B9A}
-#pc-input.error{border-color:#EF4444;animation:shake .3s}
-#pc-btn{width:100%;padding:12px;font-size:15px;font-weight:700;background:#1A6B9A;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:background .2s}
-#pc-btn:hover{background:#15587F}
-#pc-error{font-size:13px;color:#EF4444;min-height:18px}
+#pc-title{font-size:18px;font-weight:700;color:var(--navy);text-align:center;line-height:1.3;font-family:'DM Sans',sans-serif}
+#pc-sub{font-size:13px;color:var(--text3);text-align:center;margin-top:-10px}
+#pc-input{width:100%;padding:12px 16px;font-size:20px;letter-spacing:6px;text-align:center;border:2px solid var(--border);border-radius:8px;outline:none;color:var(--navy);font-weight:600;font-family:'DM Sans',sans-serif;transition:border-color .2s}
+#pc-input:focus{border-color:var(--blue)}
+#pc-input.error{border-color:var(--red);animation:shake .3s}
+#pc-btn{width:100%;padding:12px;font-size:15px;font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
+#pc-btn:hover{background:#1D4ED8}
+#pc-error{font-size:13px;color:var(--red);min-height:18px}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.header{background:linear-gradient(135deg,#0B1F3A 0%,#1A3A5C 100%);color:#fff;display:flex;align-items:center;padding:12px 24px;gap:0;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
-.header-logo{display:flex;align-items:center;padding:12px 24px 12px 0;border-right:1px solid rgba(255,255,255,.12);margin-right:24px;flex-shrink:0}
-.header-logo img{height:32px;object-fit:contain}
-.header-info{flex:1}
-.header-title{font-size:17px;font-weight:700;letter-spacing:.3px}
-.header-sub{font-size:12px;opacity:.7;margin-top:2px}
-.header-right{font-size:11px;opacity:.6;text-align:right;flex-shrink:0}
-.filter-bar{background:#fff;border-bottom:1px solid #E2E8F0;padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:58px;z-index:99;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.filter-bar label{font-size:11px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-.filter-bar select{padding:6px 8px;border:1px solid #CBD5E1;border-radius:6px;font-size:13px;color:#334155;background:#fff;cursor:pointer}
-.filter-bar select:focus{outline:none;border-color:#1A6B9A}
-.filter-sep{width:1px;height:24px;background:#E2E8F0;flex-shrink:0}
-.reset-btn{padding:6px 14px;background:#EF4444;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto}
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header{background:var(--navy);padding:0 28px;display:flex;align-items:stretch;gap:0;min-height:60px}
+.header-logo{display:flex;align-items:center;padding:0 24px 0 0;border-right:1px solid rgba(255,255,255,.12);margin-right:24px;flex-shrink:0}
+.header-logo img{height:30px;object-fit:contain}
+.header-info{flex:1;display:flex;flex-direction:column;justify-content:center}
+.header-title{color:#fff;font-size:15px;font-weight:700;letter-spacing:.2px}
+.header-sub{color:rgba(255,255,255,.55);font-size:11px;margin-top:2px}
+.header-date{color:rgba(255,255,255,.55);font-size:11px;text-align:right;display:flex;flex-direction:column;justify-content:center;white-space:nowrap}
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.tab-nav{display:flex;align-items:flex-end;gap:2px;padding:0 28px;background:var(--navy);border-bottom:none}
+.tab{padding:10px 18px;color:rgba(255,255,255,.55);font-size:12px;font-weight:500;cursor:pointer;border-radius:6px 6px 0 0;border:none;background:transparent;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.tab:hover{color:#fff;background:rgba(255,255,255,.08)}
+.tab.active{color:#fff;background:rgba(255,255,255,.13);border-bottom:2px solid var(--blue)}
+/* ── Filter bar ──────────────────────────────────────────────────────────── */
+.filter-bar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:99}
+.filter-bar label{font-size:11px;color:var(--text3);font-weight:500}
+.filter-bar select{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:var(--white);cursor:pointer;min-width:120px}
+.filter-bar select:focus{outline:2px solid var(--blue);border-color:transparent}
+.reset-btn{padding:5px 14px;border:1px solid var(--border);border-radius:6px;background:var(--white);font-size:12px;font-family:inherit;cursor:pointer;color:var(--text3)}
+.reset-btn:hover{background:var(--bg)}
+.filter-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+/* ── Month picker ────────────────────────────────────────────────────────── */
 .month-picker{position:relative}
-.month-picker-btn{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #CBD5E1;border-radius:6px;padding:6px 10px;font-size:13px;color:#334155;cursor:pointer;white-space:nowrap;min-width:130px;justify-content:space-between}
+.month-picker-btn{display:flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;color:var(--text);cursor:pointer;white-space:nowrap;min-width:130px;justify-content:space-between}
 .month-picker-btn:hover{border-color:#94A3B8}
-.mp-arrow{font-size:10px;color:#94A3B8}
-.month-picker-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:200;background:#fff;border:1px solid #CBD5E1;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);padding:10px;min-width:200px}
+.mp-arrow{font-size:10px;color:var(--text3)}
+.month-picker-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:200;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);padding:10px;min-width:200px}
 .month-picker-panel.open{display:block}
 .mp-presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.mp-presets button{flex:1;padding:5px 8px;font-size:12px;font-weight:600;background:#F1F5F9;border:1px solid #CBD5E1;border-radius:5px;cursor:pointer;color:#475569;white-space:nowrap}
-.mp-presets button:hover{background:#E2E8F0}
-.mp-presets button.active{background:#1A6B9A;color:#fff;border-color:#1A6B9A}
-.mp-divider{border-top:1px solid #E2E8F0;margin-bottom:8px}
+.mp-presets button{flex:1;padding:5px 8px;font-size:12px;font-weight:600;background:var(--bg);border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--text3);white-space:nowrap;font-family:inherit}
+.mp-presets button:hover{background:var(--border)}
+.mp-presets button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.mp-divider{border-top:1px solid var(--border);margin-bottom:8px}
 .mp-checks{display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto}
 .mp-check-row{display:flex;align-items:center;gap:8px;padding:3px 4px;border-radius:4px;cursor:pointer}
-.mp-check-row:hover{background:#F8FAFC}
-.mp-check-row input[type=checkbox]{accent-color:#1A6B9A;width:14px;height:14px;cursor:pointer}
-.mp-check-row label{font-size:13px;color:#334155;cursor:pointer;user-select:none}
-.tabs{background:#fff;border-bottom:2px solid #E2E8F0;display:flex;padding:0 24px;gap:0;overflow-x:auto}
-.tab{padding:14px 20px;font-size:13px;font-weight:600;color:#64748B;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.2s}
-.tab:hover{color:#1A6B9A}
-.tab.active{color:#1A6B9A;border-bottom-color:#1A6B9A}
-.main{max-width:1400px;margin:0 auto;padding:24px}
+.mp-check-row:hover{background:var(--bg)}
+.mp-check-row input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px;cursor:pointer}
+.mp-check-row label{font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+/* ── Main ────────────────────────────────────────────────────────────────── */
+.main{max-width:1400px;margin:0 auto;padding:20px 28px}
 .page{display:none}.page.active{display:block}
-.period-label{font-size:12px;color:#94A3B8;margin-bottom:12px;font-style:italic}
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px}
-.kpi{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-left:4px solid #1A6B9A}
-.kpi.blue{border-left-color:#2563EB}.kpi.green{border-left-color:#059669}.kpi.amber{border-left-color:#D97706}
-.kpi.red{border-left-color:#DC2626}.kpi.teal{border-left-color:#0891B2}.kpi.navy{border-left-color:#1E3A5F}
-.kpi.slate{border-left-color:#475569}.kpi.orange{border-left-color:#EA580C}
-.kpi-label{font-size:11px;color:#64748B;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-.kpi-val{font-size:28px;font-weight:800;color:#0B1F3A;line-height:1.1;margin:4px 0}
-.kpi-sub{font-size:11px;color:#94A3B8}
-.card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
-.card-title{font-size:14px;font-weight:700;color:#0B1F3A}
-.card-sub{font-size:11px;color:#94A3B8;margin-top:2px}
-.g21{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
-.g11{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.g111{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
-.gfull{margin-bottom:16px}
+.period-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;padding:6px 12px;background:var(--white);border-radius:6px;display:inline-block;border:1px solid var(--border)}
+/* ── KPI cards ───────────────────────────────────────────────────────────── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi-card{background:var(--white);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow);border-top:3px solid var(--blue)}
+.kpi-card.green{border-top-color:var(--green)}.kpi-card.amber{border-top-color:var(--amber)}
+.kpi-card.red{border-top-color:var(--red)}.kpi-card.slate{border-top-color:var(--slate)}
+.kpi-card.teal{border-top-color:var(--teal)}.kpi-card.navy{border-top-color:#1E3148}
+.kpi-card.orange{border-top-color:#EA580C}.kpi-card.purple{border-top-color:var(--purple)}
+.kpi-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:26px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-1px}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px}
+/* ── Cards & layout ──────────────────────────────────────────────────────── */
+.card{background:var(--white);border-radius:10px;padding:18px;box-shadow:var(--shadow)}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:700;color:var(--text)}
+.card-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.g11{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g111{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.gfull{margin-bottom:14px}
+/* ── Chart heights ───────────────────────────────────────────────────────── */
 .ch160{max-height:160px}.ch200{max-height:200px}.ch240{max-height:240px}
-.ch280{max-height:280px}.ch320{max-height:320px}.ch400{max-height:400px}.ch500{max-height:500px}
-.prog-item{margin-bottom:10px}
-.prog-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;color:#475569}
-.prog-bar{background:#F1F5F9;border-radius:4px;height:8px}
-.prog-fill{background:#1A6B9A;border-radius:4px;height:8px;transition:width .4s}
-.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.ch280{max-height:280px}.ch320{max-height:320px}.ch360{max-height:360px}.ch400{max-height:400px}.ch480{max-height:480px}
+/* ── Progress bars ───────────────────────────────────────────────────────── */
+.prog-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.prog-label{font-size:11px;color:var(--text2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog-track{flex:2;background:var(--bg);border-radius:4px;height:8px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;background:var(--blue)}
+.prog-n{font-size:11px;font-weight:600;color:var(--text3);min-width:32px;text-align:right}
+/* ── Pills ───────────────────────────────────────────────────────────────── */
+.pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
 .p-green{background:#DCFCE7;color:#166534}.p-amber{background:#FEF9C3;color:#854D0E}
 .p-red{background:#FEE2E2;color:#991B1B}.p-slate{background:#F1F5F9;color:#475569}
+/* ── Tables ──────────────────────────────────────────────────────────────── */
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
-.tbl th{background:#F8FAFC;padding:8px 10px;text-align:left;font-weight:600;color:#64748B;font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #E2E8F0;white-space:nowrap}
-.tbl td{padding:7px 10px;border-bottom:1px solid #F1F5F9;color:#334155}
-.tbl tr:hover td{background:#F8FAFC}
-.tbl-wrap{overflow-x:auto;max-height:420px;overflow-y:auto}
-.insight-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:20px}
-.insight{padding:14px 16px;border-radius:8px;border-left:4px solid;font-size:13px}
-.a-red{background:#FEF2F2;border-color:#DC2626;color:#991B1B}
-.a-amber{background:#FFFBEB;border-color:#D97706;color:#92400E}
-.a-green{background:#F0FDF4;border-color:#059669;color:#166534}
-.a-blue{background:#EFF6FF;border-color:#2563EB;color:#1E3A8A}
+.tbl th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);color:var(--text3);font-weight:600;font-size:11px;white-space:nowrap}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.tbl tr:hover td{background:var(--bg)}
+.tbl-wrap{overflow-x:auto;max-height:400px;overflow-y:auto}
+/* ── Insights ────────────────────────────────────────────────────────────── */
+.insight-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.insight{padding:12px 14px;border-radius:8px;border-left:4px solid;font-size:12px;line-height:1.5}
+.a-red{background:#FEF2F2;border-color:var(--red);color:#991B1B}
+.a-amber{background:#FFFBEB;border-color:var(--amber);color:#92400E}
+.a-green{background:#F0FDF4;border-color:var(--green);color:#166534}
+.a-blue{background:#EFF6FF;border-color:var(--blue);color:#1E3A8A}
 .insight strong{font-weight:700}
-.drill-panel{display:none;margin-top:12px;background:#F8FAFC;border-radius:8px;padding:14px;border:1px solid #E2E8F0}
+/* ── Drill-down ──────────────────────────────────────────────────────────── */
+.drill-panel{display:none;background:var(--white);border-radius:10px;box-shadow:var(--shadow);padding:20px;margin-top:14px;border-top:3px solid var(--blue)}
 .drill-panel.visible{display:block}
-.drill-title{font-size:13px;font-weight:700;color:#0B1F3A;margin-bottom:10px}
-.section-hdr{font-size:13px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.6px;margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid #E2E8F0}
+.drill-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
+/* ── Section heading ─────────────────────────────────────────────────────── */
+.section-hdr{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border)}
 </style>
 </head>
 <body>
@@ -120,7 +148,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F8FAFC;color:#1E293
     <div class="header-title">Triage and Early-Intervention Reporting</div>
     <div class="header-sub">FPES · OTR Group</div>
   </div>
-  <div class="header-right">
+  <div class="header-date">
     <div id="hdr-period">–</div>
     <div>Prepared by FPES · <span id="hdr-year"></span></div>
   </div>
@@ -162,13 +190,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F8FAFC;color:#1E293
   <button class="reset-btn" onclick="resetFilters()">Reset</button>
 </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTab(this,'overview')">&#128200; Summary</div>
-  <div class="tab" onclick="showTab(this,'injuries')">&#129657; Injury Analysis</div>
-  <div class="tab" onclick="showTab(this,'treatment')">&#127973; Treatment &amp; Network</div>
-  <div class="tab" onclick="showTab(this,'sites')">&#127970; Sites</div>
-  <div class="tab" onclick="showTab(this,'time')">&#128337; Time Trends</div>
-  <div class="tab" onclick="showTab(this,'prevention')">&#9888; Prevention</div>
+<div class="tab-nav">
+  <button class="tab active" onclick="showTab(this,'overview')">&#128200; Summary</button>
+  <button class="tab" onclick="showTab(this,'injuries')">&#129657; Injury Analysis</button>
+  <button class="tab" onclick="showTab(this,'treatment')">&#127973; Treatment &amp; Network</button>
+  <button class="tab" onclick="showTab(this,'sites')">&#127970; Sites</button>
+  <button class="tab" onclick="showTab(this,'time')">&#128337; Time Trends</button>
+  <button class="tab" onclick="showTab(this,'prevention')">&#9888; Prevention</button>
 </div>
 
 <div class="main">
@@ -180,7 +208,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F8FAFC;color:#1E293
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><div><div class="card-title">Monthly Injury Volume</div><div class="card-sub">Total referrals by month</div></div></div>
-      <canvas id="c-monthly-vol" class="ch240"></canvas>
+      <canvas id="c-monthly-vol" class="ch360"></canvas>
     </div>
     <div class="card">
       <div class="card-hdr"><div class="card-title">Referral Type</div></div>
@@ -189,17 +217,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F8FAFC;color:#1E293
   </div>
   <div class="section-hdr">Referral Totals — By Brand, State &amp; Treatment Type</div>
   <div class="g111">
-    <div class="card"><div class="card-hdr"><div class="card-title">By Brand</div></div><canvas id="c-brand" class="ch280"></canvas></div>
-    <div class="card"><div class="card-hdr"><div class="card-title">By State</div></div><canvas id="c-state" class="ch280"></canvas></div>
-    <div class="card"><div class="card-hdr"><div class="card-title">Treatment Network</div></div><canvas id="c-network-ov" class="ch280"></canvas></div>
-  </div>
-  <div class="gfull card">
-    <div class="card-hdr"><div><div class="card-title">Monthly Volume by Brand</div><div class="card-sub">Top brands · referrals per month</div></div></div>
-    <canvas id="c-monthly-brand" class="ch500"></canvas>
-  </div>
-  <div class="gfull card">
-    <div class="card-hdr"><div><div class="card-title">Case Closure Overview</div><div class="card-sub">Closed cases — reason breakdown (excludes Duplicates)</div></div></div>
-    <canvas id="c-closure" class="ch200"></canvas>
+    <div class="card"><div class="card-hdr"><div class="card-title">By Brand</div></div><div style="position:relative;height:340px"><canvas id="c-brand"></canvas></div></div>
+    <div class="card"><div class="card-hdr"><div class="card-title">By State</div></div><div style="position:relative;height:340px"><canvas id="c-state"></canvas></div></div>
+    <div class="card"><div class="card-hdr"><div class="card-title">Treatment Network</div><div class="card-sub">% of all referrals</div></div><div style="position:relative;height:280px"><canvas id="c-network-ov"></canvas></div></div>
   </div>
   <div class="gfull card">
     <div class="card-hdr"><div><div class="card-title">Open Cases</div><div class="card-sub">Currently active referrals</div></div></div>
@@ -227,13 +247,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F8FAFC;color:#1E293
   <div class="kpi-row" id="kpi-treatment"></div>
   <div class="g11">
     <div class="card"><div class="card-hdr"><div class="card-title">Workers Referred by Network</div></div><canvas id="c-network-treat" class="ch280"></canvas></div>
-    <div class="card"><div class="card-hdr"><div><div class="card-title">Physio Work Capacity</div><div class="card-sub">Initial recommendation where physio attended</div></div></div><canvas id="c-workcap" class="ch280"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-title">Initial Work Capacity Recommendation</div><div class="card-sub">Physio recommendation · where physio attended</div></div></div><canvas id="c-workcap" class="ch280"></canvas></div>
   </div>
   <div class="g11">
     <div class="card"><div class="card-hdr"><div><div class="card-title">Time to First Physio Appointment</div><div class="card-sub">Working days from referral</div></div></div><canvas id="c-physio-time" class="ch240"></canvas></div>
-    <div class="card"><div class="card-hdr"><div class="card-title">Physio Treatment Count Distribution</div></div><canvas id="c-tx-count" class="ch240"></canvas></div>
+    <div class="card"><div class="card-hdr"><div class="card-title">Physio Treatment Count Distribution</div></div><canvas id="c-tx-count" class="ch360"></canvas></div>
   </div>
-  <div class="gfull card"><div class="card-hdr"><div class="card-title">Triage Outcome Breakdown</div></div><canvas id="c-triage-out" class="ch240"></canvas></div>
+  <div class="gfull card"><div class="card-hdr"><div class="card-title">Triage Outcome Breakdown</div></div><div style="position:relative;height:360px"><canvas id="c-triage-out"></canvas></div></div>
   <div id="drill-treatment" class="drill-panel"></div>
 </div>
 
@@ -279,24 +299,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#F8FAFC;color:#1E293
   <div class="period-label" id="prev-period">–</div>
   <div class="kpi-row" id="kpi-prev"></div>
   <div class="gfull card"><div class="card-hdr"><div class="card-title">Prevention Alerts &amp; Recommendations</div></div><div id="prev-alerts"></div></div>
-  <div class="gfull card">
-    <div class="card-hdr"><div><div class="card-title">Sites Requiring Attention</div><div class="card-sub">Lowest triage utilisation</div></div></div>
-    <div id="prev-site-attention"></div>
-  </div>
-  <div class="gfull card">
-    <div class="card-hdr"><div class="card-title">Proactive Considerations</div></div>
-    <table class="tbl">
-      <thead><tr><th>Priority</th><th>Area</th><th>Recommendation</th></tr></thead>
-      <tbody>
-        <tr><td><span class="pill p-red">HIGH</span></td><td>Triage Pathway Compliance</td><td>Engage zero-triage sites and re-educate on the mandatory triage pathway. FPES to follow up with site managers directly.</td></tr>
-        <tr><td><span class="pill p-red">HIGH</span></td><td>Musculoskeletal Injury Prevention</td><td>High volume of back, shoulder and knee injuries suggests manual handling risk. Review safe work practices at high-volume sites.</td></tr>
-        <tr><td><span class="pill p-red">HIGH</span></td><td>Heat &amp; Environmental Hazards</td><td>Heat/environmental mechanism injuries present — review outdoor work safety, PPE and hydration protocols especially in SA/NT sites.</td></tr>
-        <tr><td><span class="pill p-amber">MEDIUM</span></td><td>Physio Lead Time</td><td>Monitor average days to first physio appointment. Early intervention targets &lt;2 working days from referral.</td></tr>
-        <tr><td><span class="pill p-amber">MEDIUM</span></td><td>Claim Conversion</td><td>Workers progressing to claim should be reviewed for early RTW support with InjurySafe RTW Case Managers.</td></tr>
-        <tr><td><span class="pill p-amber">MEDIUM</span></td><td>Psych &amp; Mental Stress</td><td>Monitor psychological and mental stress referral trends, particularly at high-turnover or high-demand sites.</td></tr>
-      </tbody>
-    </table>
-  </div>
 </div>
 
 </div>
@@ -483,7 +485,7 @@ function mkChart(id, cfg){
   charts[id]=new Chart(el.getContext('2d'),cfg);
 }
 function kpiCard(label,val,sub,color='blue'){
-  return `<div class="kpi ${color}"><div class="kpi-label">${label}</div><div class="kpi-val">${val}</div><div class="kpi-sub">${sub}</div></div>`;
+  return `<div class="kpi-card ${color}"><div class="kpi-label">${label}</div><div class="kpi-val">${val}</div><div class="kpi-sub">${sub}</div></div>`;
 }
 function getMonths(recs){
   const keys=[...new Set(recs.map(r=>r.year+'-'+String(r.month_num).padStart(2,'0')))].sort();
@@ -554,7 +556,7 @@ function renderOverview(){
 
   document.getElementById('kpi-main').innerHTML=
     kpiCard('Total Referrals',total,'Filtered period','blue')+
-    kpiCard('Open Cases',opens,'Awaiting resolution',opens>10?'red':'amber')+
+    kpiCard('Open Cases',opens,'Awaiting resolution','slate')+
     kpiCard('Triage Utilisation',triage,tPct+'% of all referrals','teal')+
     kpiCard('Avg Days to Physio',avgD,'Referral → first physio appt (Mon–Fri)','green')+
     kpiCard('Median Hrs to GP Appt',medGPHrs+'h','Referral → first GP appt ('+gpR.length+' cases)',parseFloat(medGPHrs)>8?'amber':'green')+
@@ -563,83 +565,80 @@ function renderOverview(){
     kpiCard('Work Capacity Recorded',wcRecs.length,wcPct+'% of referrals — physio capacity documented','orange')+
     kpiCard('Claim Conversion',claimed,claimPct+'% progressed to claim','navy');
 
+  var activeReftype=document.getElementById('f-reftype').value;
   const insights=[];
-  if(tPct<70) insights.push({c:'a-amber',t:'Triage utilisation at '+tPct+'%',b:'Below 80% benchmark. Engage sites not using the triage pathway.'});
-  if(opens>20) insights.push({c:'a-red',t:opens+' cases currently open',b:'High number of active cases — review for overdue actions.'});
-  if(claimPct>8) insights.push({c:'a-amber',t:'Claim conversion '+claimPct+'%',b:'Monitor cases progressing to claim for early RTW support.'});
+  // Only show triage utilisation alert when not filtered to Referral-only
+  if(activeReftype!=='REFERRAL' && tPct<70) insights.push({c:'a-amber',t:'Triage utilisation at '+tPct+'%',b:'Below 80% benchmark. Engage sites not using the triage pathway.'});
+  if(claimPct>8){
+    var claimMsg=activeReftype==='REFERRAL'
+      ? 'Workers who do not call triage have a higher claim conversion rate.'
+      : 'Monitor cases progressing to claim for early RTW support.';
+    insights.push({c:'a-amber',t:'Claim conversion '+claimPct+'%',b:claimMsg});
+  }
   if(!insights.length) insights.push({c:'a-green',t:'No immediate alerts',b:'All key metrics within expected ranges.'});
-  document.getElementById('insight-cards').innerHTML=insights.map(i=>`<div class="insight ${i.c}"><strong>${i.t}</strong><br>${i.b}</div>`).join('');
+  document.getElementById('insight-cards').innerHTML=insights.map(function(i){return '<div class="insight '+i.c+'"><strong>'+i.t+'</strong><br>'+i.b+'</div>';}).join('');
 
   const months=getMonths(recs);
   const mLabel=months.map(m=>m.label);
 
+  // Monthly Volume chart — taller, no datalabels overlap
   mkChart('c-monthly-vol',{type:'bar',data:{
     labels:mLabel,
     datasets:[
-      {label:'Triage',data:months.map(m=>recs.filter(r=>r.referral_type==='TRIAGE'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:'#1A6B9A',stack:'s',borderRadius:0,datalabels:{display:false}},
+      {label:'Triage',data:months.map(m=>recs.filter(r=>r.referral_type==='TRIAGE'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:'#2563EB',stack:'s',borderRadius:0,datalabels:{display:false}},
       {label:'Referral',data:months.map(m=>recs.filter(r=>r.referral_type==='REFERRAL'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:'#93C5FD',stack:'s',borderRadius:0,
         datalabels:{color:'#334155',anchor:'end',align:'end',font:{size:10},
-          formatter:function(v,ctx){const idx=ctx.dataIndex;return ctx.chart.data.datasets.reduce((s,ds)=>s+(typeof ds.data[idx]==='number'?ds.data[idx]:0),0)||'';}
+          formatter:function(v,ctx){var idx=ctx.dataIndex;return ctx.chart.data.datasets.reduce(function(s,ds){return s+(typeof ds.data[idx]==='number'?ds.data[idx]:0);},0)||'';}
         }
       }
     ]
-  },options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:{}},scales:{y:{beginAtZero:true,stacked:true,grid:{color:'#F1F5F9'}},x:{grid:{display:false},stacked:true}}}
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},datalabels:{}},
+    scales:{y:{beginAtZero:true,stacked:true,grid:{color:'#E2E8F0'}},x:{grid:{display:false},stacked:true,ticks:{maxRotation:45,font:{size:10}}}}}
   });
 
+  // Referral type donut — white % on dark segment
   const rt={TRIAGE:triage,REFERRAL:total-triage};
-  mkChart('c-reftype',{type:'doughnut',data:{labels:['Triage','Referral'],datasets:[{data:[rt.TRIAGE,rt.REFERRAL],backgroundColor:['#1A6B9A','#93C5FD'],borderWidth:2}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:{formatter:function(v,ctx){const t=ctx.chart.data.datasets[0].data.reduce((s,n)=>s+n,0);return Math.round(v/t*100)+'%';}}}}
+  mkChart('c-reftype',{type:'doughnut',data:{labels:['Triage','Referral'],datasets:[{data:[rt.TRIAGE,rt.REFERRAL],backgroundColor:['#2563EB','#93C5FD'],borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom'},
+      datalabels:{color:function(ctx){return ctx.dataIndex===0?'#fff':'#1E293B';},font:{weight:'700',size:13},
+        formatter:function(v,ctx){var t=ctx.chart.data.datasets[0].data.reduce(function(s,n){return s+n;},0);return Math.round(v/t*100)+'%';}}}}
   });
 
-  const br=topK(recs,'brand',20);
-  mkChart('c-brand',{type:'bar',data:{labels:br.map(p=>p[0]),datasets:[{data:br.map(p=>p[1]),backgroundColor:br.map(p=>brandColor(p[0])),borderRadius:5}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10}}},scales:{x:{beginAtZero:true,grid:{color:'#F1F5F9'}},y:{grid:{display:false}}}}
+  // Brand — show ALL brands, horizontal bar
+  var br=topK(recs,'brand',20);
+  mkChart('c-brand',{type:'bar',data:{labels:br.map(p=>p[0]),datasets:[{data:br.map(p=>p[1]),backgroundColor:br.map(p=>brandColor(p[0])),borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10},color:'#334155'}},
+      scales:{x:{beginAtZero:true,grid:{color:'#E2E8F0'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
   });
 
-  const st=topK(recs,'state',20);
-  mkChart('c-state',{type:'bar',data:{labels:st.map(p=>p[0]),datasets:[{data:st.map(p=>p[1]),backgroundColor:PAL,borderRadius:5}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10}}},scales:{x:{beginAtZero:true,grid:{color:'#F1F5F9'}},y:{grid:{display:false}}}}
+  // State — horizontal bar
+  var st=topK(recs,'state',20);
+  mkChart('c-state',{type:'bar',data:{labels:st.map(p=>p[0]),datasets:[{data:st.map(p=>p[1]),backgroundColor:PAL,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10},color:'#334155'}},
+      scales:{x:{beginAtZero:true,grid:{color:'#E2E8F0'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
   });
 
-  const nw=topK(recs,'network',10);
-  mkChart('c-network-ov',{type:'pie',data:{labels:nw.map(p=>p[0].replace(' Network','')),datasets:[{data:nw.map(p=>p[1]),backgroundColor:PAL,borderWidth:2}]},
-    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}},datalabels:{display:false}}}
+  // Network — include % of total as label
+  var nw=topK(recs,'network',10);
+  var nwTotal=nw.reduce(function(s,p){return s+p[1];},0)||1;
+  var nwTotal=nw.reduce(function(s,p){return s+p[1];},0)||1;
+  mkChart('c-network-ov',{type:'bar',data:{
+    labels:nw.map(p=>p[0].replace(' Network','')),
+    datasets:[{data:nw.map(p=>p[1]),backgroundColor:PAL,borderRadius:4,
+      datalabels:{anchor:'end',align:'end',color:'#334155',font:{size:10},
+        formatter:function(v){return v+' ('+Math.round(v/total*100)+'%)';}}}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},datalabels:{}},
+      scales:{x:{beginAtZero:true,grid:{color:'#E2E8F0'},ticks:{precision:0}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
   });
 
-  // Monthly brand chart — top 4 brands
-  const topBrands=topK(recs,'brand',4).map(p=>p[0]);
-  const mbDatasets=[];
-  topBrands.forEach(function(b){
-    var col=brandColor(b);
-    mbDatasets.push({label:b+' — Triage',data:months.map(m=>recs.filter(r=>r.brand===b&&r.referral_type==='TRIAGE'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:col,stack:b,borderRadius:0,datalabels:{display:false}});
-    mbDatasets.push({label:b+' — Referral',data:months.map(m=>recs.filter(r=>r.brand===b&&r.referral_type==='REFERRAL'&&r.month===m.month&&r.year===m.yr).length),backgroundColor:col+'88',stack:b,borderRadius:0,
-      datalabels:{color:'#334155',anchor:'end',align:'end',font:{size:9},
-        formatter:function(v,ctx){
-          var idx=ctx.dataIndex, stack=ctx.dataset.stack;
-          var allStacks=ctx.chart.data.datasets.map(function(ds){return ds.stack;});
-          var lastIdx=-1;
-          for(var i=allStacks.length-1;i>=0;i--){ if(allStacks[i]===stack){lastIdx=i;break;} }
-          if(ctx.datasetIndex!==lastIdx) return '';
-          var tot=ctx.chart.data.datasets.filter(function(ds){return ds.stack===stack;}).reduce(function(s,ds){return s+(typeof ds.data[idx]==='number'?ds.data[idx]:0);},0);
-          return tot>0?tot:'';
-        }
-      }
-    });
-  });
-  mkChart('c-monthly-brand',{type:'bar',data:{labels:mLabel,datasets:mbDatasets},
-    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,padding:16}},datalabels:{}},scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#F1F5F9'},stacked:true},x:{grid:{display:false},stacked:true}}}
-  });
-
-  const closureRecs=recs.filter(r=>r.case_closed_reason&&!r.case_closed_reason.includes('Duplicate'));
-  const cr=topK(closureRecs,'case_closed_reason',8);
-  mkChart('c-closure',{type:'bar',data:{labels:cr.map(p=>p[0].length>50?p[0].slice(0,50)+'…':p[0]),datasets:[{data:cr.map(p=>p[1]),backgroundColor:'#1A6B9A',borderRadius:5}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10}}},scales:{x:{beginAtZero:true,grid:{color:'#F1F5F9'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
-  });
-
-  const openRecs=recs.filter(r=>r.status==='Open');
-  const otHead=`<tr><th>Referral Date</th><th>Injury Date</th><th>Brand</th><th>State</th><th>Site</th><th>Injury Site</th><th>Mechanism</th><th>Network</th><th>Physio Tx</th></tr>`;
-  const otBody=openRecs.map(r=>`<tr><td>${fmtDate(r.created_date)}</td><td>${fmtDate(r.date_of_injury)}</td><td>${r.brand||'—'}</td><td>${r.state||'—'}</td><td>${r.site_name||'—'}</td><td>${r.injury_site||'—'}</td><td>${r.mechanism||'—'}</td><td>${(r.network||'—').replace(' Network','')}</td><td>${r.physio_treatments||0}</td></tr>`).join('');
-  document.getElementById('tbl-open').innerHTML=`<table class="tbl"><thead>${otHead}</thead><tbody>${otBody}</tbody></table>`;
+  // Open cases table
+  var openRecs=recs.filter(r=>r.status==='Open');
+  var otHead='<tr><th>Referral Date</th><th>Injury Date</th><th>Brand</th><th>State</th><th>Site</th><th>Injury Site</th><th>Mechanism</th><th>Network</th><th>Physio Tx</th></tr>';
+  var otBody=openRecs.map(function(r){return '<tr><td>'+fmtDate(r.created_date)+'</td><td>'+fmtDate(r.date_of_injury)+'</td><td>'+(r.brand||'—')+'</td><td>'+(r.state||'—')+'</td><td>'+(r.site_name||'—')+'</td><td>'+(r.injury_site||'—')+'</td><td>'+(r.mechanism||'—')+'</td><td>'+((r.network||'—').replace(' Network',''))+'</td><td>'+(r.physio_treatments||0)+'</td></tr>';}).join('');
+  document.getElementById('tbl-open').innerHTML='<table class="tbl"><thead>'+otHead+'</thead><tbody>'+otBody+'</tbody></table>';
 
   drillChart('c-brand','drill-overview',function(l){return 'Brand: '+l;},function(l){return filtered.filter(r=>r.brand===l);});
   drillChart('c-state','drill-overview',function(l){return 'State: '+l;},function(l){return filtered.filter(r=>r.state===l);});
@@ -663,8 +662,8 @@ function renderInjuries(){
   const sites=topK(recs,'injury_site',15);
   const sMax=sites[0]?.[1]||1;
   document.getElementById('c-inj-site-bars').innerHTML=sites.map(function(sp){
-    var s=sp[0],n=sp[1];
-    return '<div class="prog-item"><div class="prog-label"><span>'+s+'</span><span>'+n+'</span></div><div class="prog-bar"><div class="prog-fill" style="width:'+(n/sMax*100)+'%"></div></div></div>';
+    var s=sp[0],n=sp[1],pct=total?Math.round(n/total*100):0;
+    return '<div class="prog-row"><div class="prog-label">'+s+'</div><div class="prog-track"><div class="prog-fill" style="width:'+(n/sMax*100)+'%"></div></div><div class="prog-n">'+n+' <span style="color:#94A3B8;font-weight:400;font-size:10px">('+pct+'%)</span></div></div>';
   }).join('');
 
   const mech=topK(recs,'mechanism',12);
@@ -707,13 +706,16 @@ function renderTreatment(){
     kpiCard('Claim Conversion',claimed,claimPct+'% of referrals progressed to claim','red');
 
   const nw=topK(recs,'network',8);
-  mkChart('c-network-treat',{type:'bar',data:{labels:nw.map(p=>p[0].replace(' Network','')),datasets:[{data:nw.map(p=>p[1]),backgroundColor:PAL,borderRadius:5}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10}}},scales:{x:{beginAtZero:true},y:{grid:{display:false}}}}
+  mkChart('c-network-treat',{type:'bar',data:{labels:nw.map(p=>p[0].replace(' Network','')),datasets:[{data:nw.map(p=>p[1]),backgroundColor:PAL,borderRadius:5,
+    datalabels:{anchor:'end',align:'end',font:{size:10},color:'#334155',formatter:function(v){return v+' ('+Math.round(v/total*100)+'%)';}}}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{}},scales:{x:{beginAtZero:true,grid:{color:'#E2E8F0'}},y:{grid:{display:false}}}}
   });
 
   const wc=topK(wcRecs,'work_capacity',8);
-  mkChart('c-workcap',{type:'bar',data:{labels:wc.map(p=>p[0]),datasets:[{data:wc.map(p=>p[1]),backgroundColor:['#059669','#2563EB','#D97706','#DC2626','#7C3AED','#0891B2'],borderRadius:5}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10}}},scales:{x:{beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  var wcAll=wcRecs.length||1;
+  mkChart('c-workcap',{type:'bar',data:{labels:wc.map(p=>p[0]),datasets:[{data:wc.map(p=>p[1]),backgroundColor:['#059669','#2563EB','#D97706','#DC2626','#7C3AED','#0891B2'],borderRadius:5,
+    datalabels:{anchor:'end',align:'end',font:{size:10},color:'#334155',formatter:function(v){return v+' ('+Math.round(v/wcAll*100)+'%)';}}}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{}},scales:{x:{beginAtZero:true,grid:{color:'#E2E8F0'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
   });
 
   const dayBuckets={'Same Day (0)':0,'1 day':0,'2 days':0,'3–5 days':0,'6+ days':0};
@@ -722,15 +724,19 @@ function renderTreatment(){
     options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:11}}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
   });
 
-  const txBuckets={'1–2':0,'3–4':0,'5–6':0,'7+':0};
-  recs.filter(r=>r.physio_treatments>0).forEach(function(r){ var n=r.physio_treatments; if(n<=2)txBuckets['1–2']++; else if(n<=4)txBuckets['3–4']++; else if(n<=6)txBuckets['5–6']++; else txBuckets['7+']++; });
-  mkChart('c-tx-count',{type:'bar',data:{labels:Object.keys(txBuckets),datasets:[{data:Object.values(txBuckets),backgroundColor:PAL,borderRadius:5}]},
-    options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:11}}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
+  var txBuckets={'1–2':0,'3–4':0,'5–6':0};
+  recs.filter(r=>r.physio_treatments>0&&r.physio_treatments<=6).forEach(function(r){ var n=r.physio_treatments; if(n<=2)txBuckets['1–2']++; else if(n<=4)txBuckets['3–4']++; else txBuckets['5–6']++; });
+  var txTotal=Object.values(txBuckets).reduce(function(a,b){return a+b;},0)||1;
+  mkChart('c-tx-count',{type:'bar',data:{labels:Object.keys(txBuckets),datasets:[{data:Object.values(txBuckets),backgroundColor:['#2563EB','#059669','#D97706'],borderRadius:5,
+    datalabels:{anchor:'end',align:'end',font:{size:10},color:'#334155',formatter:function(v){return v+' ('+Math.round(v/txTotal*100)+'%)';}}}]},
+    options:{responsive:true,plugins:{legend:{display:false},datalabels:{}},scales:{y:{beginAtZero:true,grid:{color:'#E2E8F0'}},x:{grid:{display:false}}}}
   });
 
   const to=topK(recs.filter(r=>r.triage_outcome),'triage_outcome',10);
-  mkChart('c-triage-out',{type:'bar',data:{labels:to.map(p=>p[0].length>45?p[0].slice(0,45)+'…':p[0]),datasets:[{data:to.map(p=>p[1]),backgroundColor:PAL,borderRadius:5}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:10}}},scales:{x:{beginAtZero:true},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  mkChart('c-triage-out',{type:'bar',data:{labels:to.map(p=>p[0]),datasets:[{data:to.map(p=>p[1]),backgroundColor:PAL,borderRadius:5,
+    datalabels:{anchor:'end',align:'end',font:{size:10},color:'#334155',formatter:function(v){return v+' ('+Math.round(v/total*100)+'%)';}}}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{}},
+      scales:{x:{beginAtZero:true,grid:{color:'#E2E8F0'},ticks:{precision:0}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
   });
 
   drillChart('c-network-treat','drill-treatment',function(l){return 'Network: '+l;},function(l){return filtered.filter(r=>(r.network||'').replace(' Network','')===l);});
@@ -845,34 +851,40 @@ function renderTime(){
 
 // ── Render Prevention ─────────────────────────────────────────────────────────
 function renderPrevention(){
-  const recs=filtered, total=recs.length;
+  const recs=filtered;
   document.getElementById('prev-period').textContent=getPeriodStr(recs);
   const sd=buildSiteTriage(recs);
-  const noT=sd.filter(s=>s.triage===0);
-  const lowT=sd.filter(s=>s.total>0&&s.pct>0&&s.pct<60);
-  const physWD=recs.filter(r=>r.physio_work_days!=null&&r.physio_work_days>=0).map(r=>r.physio_work_days);
-  const avgD=physWD.length?(physWD.reduce((a,b)=>a+b,0)/physWD.length).toFixed(1):'—';
+  const noT=sd.filter(s=>s.triage===0).sort(function(a,b){return a.site.localeCompare(b.site);});
+  const lowT=sd.filter(s=>s.total>0&&s.pct>0&&s.pct<60).sort(function(a,b){return a.pct-b.pct;});
 
+  // KPIs — no avg days to physio
   document.getElementById('kpi-prev').innerHTML=
-    kpiCard('Zero-Triage Sites',noT.length,'Triage not utilised — direct referral only',noT.length>0?'red':'green')+
-    kpiCard('Low-Triage Sites (<60%)',lowT.length,'Sites below 60% triage utilisation',lowT.length>3?'amber':'slate')+
-    kpiCard('Avg Days to Physio',avgD,'Referral → first physio appt (Mon–Fri)',parseFloat(avgD)>=3?'amber':'green');
+    kpiCard('Zero-Triage Sites',noT.length,'Sites entering via direct referral only',noT.length>0?'red':'green')+
+    kpiCard('Low-Triage Sites (<60%)',lowT.length,'Sites below 60% triage utilisation',lowT.length>3?'amber':'slate');
 
-  const alerts=[];
-  if(noT.length) alerts.push({c:'a-red',t:noT.length+' Sites Did Not Utilise Triage',b:'Sites entering the program via direct referral, bypassing the triage pathway: <strong>'+noT.map(s=>s.site).join(', ')+'</strong>. Re-education recommended.'});
-  if(lowT.length) alerts.push({c:'a-amber',t:lowT.length+' Sites with Low Triage Utilisation (<60%)',b:lowT.map(s=>s.site+' ('+s.pct+'%)').join(', ')});
-  if(parseFloat(avgD)>=3) alerts.push({c:'a-amber',t:'Average physio appointment lead time is '+avgD+' working days',b:'FPES to monitor appointment access and consider network expansion in high-demand areas.'});
-  if(!alerts.length) alerts.push({c:'a-green',t:'No immediate alerts',b:'All key prevention metrics within expected ranges.'});
-  document.getElementById('prev-alerts').innerHTML=alerts.map(a=>`<div class="insight ${a.c}" style="margin-bottom:10px"><strong>${a.t}</strong><br>${a.b}</div>`).join('');
+  // Alerts block — reworded, unbold site names, list form
+  var alertHtml='';
 
-  document.getElementById('prev-site-attention').innerHTML=sd.filter(s=>s.total>0).sort(function(a,b){return a.pct-b.pct;}).slice(0,10).map(function(s){
-    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F1F5F9"><span class="pill '+(s.pct<60?'p-red':s.pct<80?'p-amber':'p-green')+'">'+s.pct+'%</span><span style="font-size:12px;color:#334155;flex:1">'+s.site+'</span><span style="font-size:11px;color:#64748B">'+s.brand+'</span><span style="font-size:11px;color:#94A3B8">'+s.total+' referrals</span></div>';
-  }).join('');
+  // Zero triage block
+  if(noT.length){
+    var siteList=noT.map(function(s){return '<li style="margin:2px 0 2px 16px;font-size:12px;color:#991B1B;">'+s.site+' <span style="color:#CBD5E1;font-size:10px">('+s.total+' referral'+(s.total!==1?'s':'')+')</span></li>';}).join('');
+    alertHtml+='<div class="insight a-red" style="margin-bottom:10px"><strong>'+noT.length+' Sites Did Not Utilise Triage</strong><br><span style="font-weight:400">Sites who have engaged with FPES for early-intervention support or treatment without utilising triage.</span><ul style="margin-top:8px;list-style:disc;padding:0">'+siteList+'</ul></div>';
+  }
+
+  // Low triage block
+  if(lowT.length){
+    var ltList=lowT.map(function(s){return '<li style="margin:2px 0 2px 16px;font-size:12px;color:#92400E;">'+s.site+' <span style="color:#D97706;font-weight:600">'+s.pct+'%</span> <span style="color:#CBD5E1;font-size:10px">('+s.triage+'/'+s.total+' triaged)</span></li>';}).join('');
+    alertHtml+='<div class="insight a-amber" style="margin-bottom:10px"><strong>'+lowT.length+' Sites with Low Triage Utilisation (&lt;60%)</strong><br><span style="font-weight:400">Listed from lowest to highest triage utilisation.</span><ul style="margin-top:8px;list-style:disc;padding:0">'+ltList+'</ul></div>';
+  }
+
+  if(!alertHtml) alertHtml='<div class="insight a-green"><strong>No triage compliance alerts</strong><br>All sites are utilising the triage pathway.</div>';
+  document.getElementById('prev-alerts').innerHTML=alertHtml;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 Chart.register(ChartDataLabels);
 populateFilters();
+setMonthPreset('12',null);
 document.getElementById('hdr-year').textContent=new Date().getFullYear();
 renderOverview();
 </script>
